@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "b790bab5-4df9-4ee1-a0d8-a005bd1449d9"
+      }
+    },
+    "owner": "consentmesh",
+    "android": {
+      "package": "com.consentmesh.consentmeshpro"
+    }
+  }
+}
