@@ -1,4 +1,4 @@
-import { Platform, StyleSheet, Text, View, Button, Switch, ScrollView } from 'react-native';
+import { Platform, StyleSheet, Text, View, Button, Switch, ScrollView, Linking } from 'react-native';
 import { useEffect, useState } from 'react';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
@@ -26,13 +26,20 @@ export default function App() {
   };
 
   const handleUpgrade = async () => {
-    if (Platform.OS === 'web') {
-      alert("RevenueCat native paywalls render on iOS and Android devices. For web billing, configure a Web Purchase Link!");
-    } else {
-      const paywallResult = await RevenueCatUI.presentPaywall();
-      if (paywallResult === PAYWALL_RESULT.PURCHASED || paywallResult === PAYWALL_RESULT.RESTORED) {
-        setIsPro(true);
-      }
+    try {
+      // 1. Automatically grab the active RevenueCat User ID (handles anonymous & logged-in IDs)
+      const userId = await Purchases.getAppUserID();
+
+      // 2. Your generated RevenueCat web purchase sandbox link
+      const baseUrl = 'https://pay.rev.cat/sandbox/rgogunhirfbsmxta';
+
+      // 3. Construct the dynamic checkout URL with the user ID appended
+      const checkoutUrl = `${baseUrl}/${userId}`;
+
+      // 4. Open the secure checkout page in the browser
+      await Linking.openURL(checkoutUrl);
+    } catch (e) {
+      console.log("Error launching checkout link", e);
     }
   };
 
