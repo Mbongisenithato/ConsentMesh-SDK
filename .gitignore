@@ -3,3 +3,5 @@
 .expo/
 .vscode/
 .env
+android/
+ios/
