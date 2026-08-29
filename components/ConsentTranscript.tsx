@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
 
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://your-api-gateway-url.amazonaws.com/prod';
+
 export default function ConsentTranscript({ tenantId }: { tenantId: string }) {
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch(`/api/v1/consent/ledger?tenantId=${tenantId}`)
+    fetch(`${API_BASE_URL}/api/v1/consent/ledger?tenantId=${tenantId}`)
       .then(res => res.json())
       .then(data => setAuditLogs(data.logs || []))
       .catch(err => console.error('Failed to load transcript:', err));
