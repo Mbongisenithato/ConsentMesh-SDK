@@ -1,3 +1,5 @@
+import "./globals.css";
+
 export const metadata = {
   title: "ConsentMesh Pro",
   description: "ConsentMesh SDK and Billing Portal",
