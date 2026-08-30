@@ -1,65 +1,63 @@
-import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
-import { DynamoDBDocumentClient, UpdateCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { headers } from "next/headers";
+import { NextResponse } from "next/server";
+import Stripe from "stripe";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' });
-const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({ region: process.env.AWS_REGION }));
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2025-02-28.acacia" as any,
+});
 
-const PRICE_TO_TIER_MAP: Record<string, 'starter' | 'growth' | 'enterprise'> = {
-  [process.env.STRIPE_STARTER_PRICE_ID!]: 'starter',
-  [process.env.STRIPE_GROWTH_PRICE_ID!]: 'growth',
-  [process.env.STRIPE_ENTERPRISE_PRICE_ID!]: 'enterprise',
-};
+const client = new DynamoDBClient({ region: process.env.AWS_REGION || "us-east-1" });
+const docClient = DynamoDBDocumentClient.from(client);
+const tableName = process.env.DYNAMODB_USER_TABLE || "ConsentMeshUsers";
 
-export async function POST(req: Request) {
-  const payload = await req.text();
-  const signature = req.headers.get('stripe-signature')!;
-  
-  let event;
+export async function POST(request: Request) {
+  const body = await request.text();
+  const headerList = await headers();
+  const signature = headerList.get("stripe-signature") as string;
+
+  let event: Stripe.Event;
+
   try {
-    event = stripe.webhooks.constructEvent(payload, signature, process.env.STRIPE_WEBHOOK_SECRET!);
+    event = stripe.webhooks.constructEvent(
+      body,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET!
+    );
   } catch (err: any) {
-    return NextResponse.json({ error: \Webhook Error: \\ }, { status: 400 });
+    return NextResponse.json(
+      { error: `Webhook Error: ${err.message}` },
+      { status: 400 }
+    );
   }
 
-  if (event.type === 'checkout.session.completed') {
+  if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const userId = session.client_reference_id;
-    
-    const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
-    const priceId = subscription.items.data[0].price.id;
-    const purchasedTier = PRICE_TO_TIER_MAP[priceId] || 'starter';
+    const userId = session.metadata?.userId || session.customer_email;
 
     if (userId) {
-      await docClient.send(new UpdateCommand({
-        TableName: process.env.DYNAMODB_USERS_TABLE,
-        Key: { userId },
-        UpdateExpression: 'set tier = :t, stripeSubscriptionId = :s, billingCycle = :bc',
-        ExpressionAttributeValues: {
-          ':t': purchasedTier,
-          ':s': session.subscription,
-          ':bc': subscription.items.data[0].price.recurring?.interval === 'year' ? 'annual' : 'monthly',
-        }
-      }));
-    }
-  }
-
-  if (event.type === 'customer.subscription.deleted') {
-    const subscription = event.data.object as Stripe.Subscription;
-    const customerId = subscription.customer as string;
-
-    // Find user by stripeSubscriptionId and revert to free tier
-    await docClient.send(new UpdateCommand({
-      TableName: process.env.DYNAMODB_USERS_TABLE,
-      Key: { stripeSubscriptionId: subscription.id }, // Note: Adjust key lookup if using GSI for stripeSubscriptionId
-      UpdateExpression: 'set tier = :t, billingCycle = :bc, stripeSubscriptionId = :s',
-      ExpressionAttributeValues: {
-        ':t': 'free',
-        ':bc': 'none',
-        ':s': null,
+      try {
+        await docClient.send(
+          new UpdateCommand({
+            TableName: tableName,
+            Key: { userId },
+            UpdateExpression:
+              "SET subscriptionTier = :tier, updatedAt = :updatedAt",
+            ExpressionAttributeValues: {
+              ":tier": "starter",
+              ":updatedAt": new Date().toISOString(),
+            },
+          })
+        );
+      } catch (dbError) {
+        console.error("Failed to update DynamoDB record:", dbError);
+        return NextResponse.json(
+          { error: "Database update error" },
+          { status: 500 }
+        );
       }
-    }));
+    }
   }
 
   return NextResponse.json({ received: true });
