@@ -1,42 +1,42 @@
 {
-    "name":  "consentmesh-pro",
-    "version":  "1.0.0",
-    "scripts":  {
-                    "start":  "next start",
-                    "android":  "expo run:android",
-                    "ios":  "expo run:ios",
-                    "web":  "expo start --web",
-                    "dev":  "next dev --webpack",
-                    "build":  "next build --webpack"
-                },
-    "dependencies":  {
-                         "@aws-sdk/client-dynamodb":  "^3.1123.0",
-                         "@aws-sdk/lib-dynamodb":  "^3.1123.0",
-                         "@expo/metro-runtime":  "~5.0.5",
-                         "@tailwindcss/postcss":  "^4.3.3",
-                         "autoprefixer":  "^10.5.4",
-                         "expo":  "^53.0.27",
-                         "expo-dev-client":  "~5.2.4",
-                         "expo-status-bar":  "~2.2.3",
-                         "expo-system-ui":  "~5.0.11",
-                         "next":  "^16.3.3",
-                         "postcss":  "^8.5.26",
-                         "react":  "^19.0.0",
-                         "react-dom":  "^19.0.0",
-                         "react-native":  "0.79.6",
-                         "react-native-purchases":  "^10.7.2",
-                         "react-native-purchases-ui":  "^10.7.2",
-                         "react-native-web":  "~0.20.0",
-                         "stripe":  "^22.6.0",
-                         "tailwindcss":  "^4.3.3"
-                     },
-    "devDependencies":  {
-                            "@babel/core":  "^7.25.0",
-                            "@types/react":  "19.2.18",
-                            "typescript":  "7.0.2"
-                        },
-    "private":  true,
-    "overrides":  {
-                      "image-size":  "^1.1.1"
-                  }
+    "name": "consentmesh-pro",
+    "version": "1.0.0",
+    "scripts": {
+        "start": "next start",
+        "android": "expo run:android",
+        "ios": "expo run:ios",
+        "web": "expo start --web",
+        "dev": "next dev --webpack",
+        "build": "next build --webpack"
+    },
+    "dependencies": {
+        "@aws-sdk/client-dynamodb": "^3.1123.0",
+        "@aws-sdk/lib-dynamodb": "^3.1123.0",
+        "@expo/metro-runtime": "~5.0.5",
+        "@tailwindcss/postcss": "^4.3.3",
+        "autoprefixer": "^10.5.4",
+        "expo": "^53.0.27",
+        "expo-dev-client": "~5.2.4",
+        "expo-status-bar": "~2.2.3",
+        "expo-system-ui": "~5.0.11",
+        "next": "^16.3.3",
+        "postcss": "^8.5.26",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0",
+        "react-native": "0.79.6",
+        "react-native-purchases": "^10.7.2",
+        "react-native-purchases-ui": "^10.7.2",
+        "react-native-web": "~0.20.0",
+        "stripe": "^22.6.0",
+        "tailwindcss": "^4.3.3"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.25.0",
+        "@types/react": "19.2.18",
+        "typescript": "7.0.2"
+    },
+    "private": true,
+    "overrides": {
+        "image-size": "^1.1.1"
+    }
 }
