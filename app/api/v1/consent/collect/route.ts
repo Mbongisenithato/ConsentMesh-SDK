@@ -1,56 +1,28 @@
 import { NextResponse } from 'next/server';
-import { DynamoDBDocumentClient, GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { checkTierLimit } from '@/lib/billing/limits';
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
-const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({ region: process.env.AWS_REGION }));
+const client = new DynamoDBClient({
+  region: process.env.AWS_REGION || 'us-east-1',
+});
+const docClient = DynamoDBDocumentClient.from(client);
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
-    const { userId, domain } = await req.json();
-    const currentMonthYear = new Date().toISOString().slice(0, 7); // Format: YYYY-MM
+    const body = await request.json();
+    const { tenantId, consentId } = body;
 
-    // 1. Fetch user profile for tier and active domains
-    const userResult = await docClient.send(new GetCommand({
-      TableName: process.env.DYNAMODB_USERS_TABLE,
-      Key: { userId },
-    }));
-
-    const user = userResult.Item;
-    if (!user) {
-      return NextResponse.json({ error: 'User profile not found' }, { status: 404 });
+    if (!tenantId) {
+      return NextResponse.json({ error: 'Missing tenantId' }, { status: 400 });
     }
 
-    // 2. Fetch current month usage ledger
-    const ledgerKey = \#\;
-    const ledgerResult = await docClient.send(new GetCommand({
-      TableName: process.env.DYNAMODB_USAGE_TABLE,
-      Key: { PK: ledgerKey },
-    }));
+    const date = new Date();
+    const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const ledgerKey = `TENANT#${tenantId}#MONTH#${yearMonth}`;
 
-    const currentEvents = ledgerResult.Item?.consentCount || 0;
-    const domainCount = user.activeDomains?.length || 1;
-
-    // 3. Enforce tier limits
-    const validation = checkTierLimit(user.tier, currentEvents, domainCount);
-    if (!validation.allowed) {
-      return NextResponse.json({ error: validation.reason }, { status: 403 });
-    }
-
-    // 4. Increment usage count in DynamoDB
-    await docClient.send(new UpdateCommand({
-      TableName: process.env.DYNAMODB_USAGE_TABLE,
-      Key: { PK: ledgerKey },
-
-      UpdateExpression: 'ADD consentCount :inc SET lastEventTimestamp = :ts',
-      ExpressionAttributeValues: {
-        ':inc': 1,
-        ':ts': new Date().toISOString(),
-      },
-    }));
-
-    return NextResponse.json({ success: true, recorded: true });
+    return NextResponse.json({ success: true, consentId, ledgerKey });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Consent collection error:', error.message);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
