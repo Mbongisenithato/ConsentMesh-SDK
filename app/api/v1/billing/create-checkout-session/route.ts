@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-02-28.acacia" as any,
-});
+function getStripe() {
+  const secretKey = process.env.STRIPE_SECRET_KEY || 'sk_test_stub';
+  return new Stripe(secretKey, {
+    apiVersion: '2026-08-26.dahlia',
+  });
+}
 
 const TIER_PRICES: Record<string, { name: string; amount: number }> = {
   starter: { name: "ConsentMesh Pro Starter Tier", amount: 3900 },
@@ -18,7 +21,7 @@ export async function POST(request: Request) {
 
     const selectedTier = TIER_PRICES[tier] || TIER_PRICES.starter;
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
         {
@@ -51,4 +54,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
 

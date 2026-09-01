@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: '2026-08-26.dahlia',
-});
+function getStripe() {
+  const secretKey = process.env.STRIPE_SECRET_KEY || 'sk_test_stub';
+  return new Stripe(secretKey, {
+    apiVersion: '2026-08-26.dahlia',
+  });
+}
 
 export async function POST(request: Request) {
   try {
@@ -14,14 +17,14 @@ export async function POST(request: Request) {
     }
 
     // 1. Create or retrieve corporate customer in Stripe
-    const customer = await stripe.customers.create({
+    const customer = await getStripe().customers.create({
       name: companyName,
       email: email,
       metadata: { tier: tierId, segment: 'Enterprise_B2B' },
     });
 
     // 2. Create invoice item for the selected tier subscription period
-    const invoiceItem = await stripe.invoiceItems.create({
+    const invoiceItem = await getStripe().invoiceItems.create({
       customer: customer.id,
       amount: amount * 100, // Amount in cents
       currency: 'usd',
@@ -29,7 +32,7 @@ export async function POST(request: Request) {
     });
 
     // 3. Create draft invoice with send_invoice collection method
-    const invoice = await stripe.invoices.create({
+    const invoice = await getStripe().invoices.create({
       customer: customer.id,
       collection_method: 'send_invoice',
       days_until_due: 30,
@@ -38,8 +41,8 @@ export async function POST(request: Request) {
     });
 
     // 4. Finalize and send the official B2B invoice via email
-    const finalizedInvoice = await stripe.invoices.finalizeInvoice(invoice.id);
-    const sentInvoice = await stripe.invoices.sendInvoice(finalizedInvoice.id);
+    const finalizedInvoice = await getStripe().invoices.finalizeInvoice(invoice.id);
+    const sentInvoice = await getStripe().invoices.sendInvoice(finalizedInvoice.id);
 
     return NextResponse.json({ 
       success: true, 
@@ -52,4 +55,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Internal Server Error generating enterprise invoice' }, { status: 500 });
   }
 }
+
 

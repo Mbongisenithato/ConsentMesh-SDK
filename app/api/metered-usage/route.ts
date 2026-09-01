@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: '2026-08-26.dahlia',
-});
+function getStripe() {
+  const secretKey = process.env.STRIPE_SECRET_KEY || 'sk_test_stub';
+  return new Stripe(secretKey, {
+    apiVersion: '2026-08-26.dahlia',
+  });
+}
 
 export async function POST(request: Request) {
   try {
@@ -12,7 +15,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing subscriptionItemId or quantity' }, { status: 400 });
     }
 
-    const usageRecord = await (stripe.subscriptionItems as any).createUsageRecord(
+    const usageRecord = await (getStripe().subscriptionItems as any).createUsageRecord(
       subscriptionItemId,
       {
         quantity,
@@ -27,3 +30,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Internal Server Error reporting usage' }, { status: 500 });
   }
 }
+

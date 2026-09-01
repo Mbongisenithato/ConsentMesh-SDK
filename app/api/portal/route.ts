@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: '2026-08-26.dahlia',
-});
+function getStripe() {
+  const secretKey = process.env.STRIPE_SECRET_KEY || 'sk_test_stub';
+  return new Stripe(secretKey, {
+    apiVersion: '2026-08-26.dahlia',
+  });
+}
 
 export async function POST(request: Request) {
   try {
@@ -13,7 +16,7 @@ export async function POST(request: Request) {
     }
 
     const origin = request.headers.get('origin') || 'http://localhost:3000';
-    const portalSession = await stripe.billingPortal.sessions.create({
+    const portalSession = await getStripe().billingPortal.sessions.create({
       customer: customerId,
       return_url: `${origin}/dashboard`,
     });
@@ -24,4 +27,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Internal Server Error during portal initialization' }, { status: 500 });
   }
 }
+
 
