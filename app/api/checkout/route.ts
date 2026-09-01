@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: '2025-02-28.acacia',
+  apiVersion: '2026-08-26.dahlia',
 });
 
 export async function POST(request: Request) {
@@ -33,3 +33,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Internal Server Error during checkout initialization' }, { status: 500 });
   }
 }
+
