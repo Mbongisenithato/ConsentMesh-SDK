@@ -23,7 +23,7 @@
         "postcss": "^8.5.26",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
-        "react-native": "0.79.6",
+        "react-native": "0.86.3",
         "react-native-purchases": "^10.7.2",
         "react-native-purchases-ui": "^10.7.2",
         "react-native-web": "~0.20.0",
